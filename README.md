@@ -14,6 +14,5 @@ Install using `go get github.com/markstgodard/go-neutron`.
 client, err := neutron.NewClient("http://192.168.56.101:9696", "some-keystone-token")
 
 // get networks
-
 networks, err := client.Networks()
 ```
