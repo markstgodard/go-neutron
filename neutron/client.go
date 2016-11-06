@@ -49,6 +49,10 @@ func (c *Client) Networks() ([]Network, error) {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("Error: %s\n", resp.Status)
+	}
+
 	body, err := ioutil.ReadAll(resp.Body)
 
 	var n getNetworks
