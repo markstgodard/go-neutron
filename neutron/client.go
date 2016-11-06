@@ -20,7 +20,7 @@ type Network struct {
 	project_id  string   `json:"project_id"`
 }
 
-type Networks struct {
+type getNetworks struct {
 	Networks []Network `json:"networks"`
 }
 
@@ -39,23 +39,23 @@ func NewClient(url, token string) (*Client, error) {
 	return &Client{URL: url, token: token}, nil
 }
 
-func (c *Client) Networks() (Networks, error) {
+func (c *Client) Networks() ([]Network, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", fmt.Sprintf("%s/v2.0/networks", c.URL), nil)
 	req.Header.Add(X_AUTH_TOKEN_HEADER, c.token)
 	resp, err := client.Do(req)
 	if err != nil {
-		return Networks{}, err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 
-	var networks Networks
-	err = json.Unmarshal(body, &networks)
+	var n getNetworks
+	err = json.Unmarshal(body, &n)
 	if err != nil {
-		return Networks{}, err
+		return nil, err
 	}
 
-	return networks, nil
+	return n.Networks, nil
 }

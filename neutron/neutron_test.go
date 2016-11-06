@@ -60,7 +60,6 @@ var _ = Describe("Neutron API", func() {
 	})
 
 	Describe("Networks", func() {
-
 		BeforeEach(func() {
 			var err error
 			server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -76,9 +75,9 @@ var _ = Describe("Neutron API", func() {
 		})
 
 		It("can list networks", func() {
-			resp, err := client.Networks()
+			networks, err := client.Networks()
 			Expect(err).ToNot(HaveOccurred())
-			Expect(resp.Networks).To(HaveLen(1))
+			Expect(networks).To(HaveLen(1))
 		})
 
 	})
