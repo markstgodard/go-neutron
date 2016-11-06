@@ -35,14 +35,40 @@ var _ = Describe("Neutron API", func() {
   ]
 }`
 
+	Describe("NewClient", func() {
+		var err error
+
+		It("requires a URL and token", func() {
+			client, err = neutron.NewClient("http://192.168.56.101:9696", "some-token")
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		Context("when URL is missing", func() {
+			It("returns an error", func() {
+				client, err = neutron.NewClient("", "some-token")
+				Expect(err).To(MatchError("missing URL"))
+			})
+		})
+
+		Context("when token is missing", func() {
+			It("returns an error", func() {
+				client, err = neutron.NewClient("http://192.168.56.101:9696", "")
+				Expect(err).To(MatchError("missing token"))
+			})
+		})
+
+	})
+
 	Describe("Networks", func() {
 
 		BeforeEach(func() {
+			var err error
 			server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				fmt.Fprintln(w, networks)
 			}))
 
-			client = neutron.NewClient(server.URL, "some-token")
+			client, err = neutron.NewClient(server.URL, "some-token")
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		AfterEach(func() {

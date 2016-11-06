@@ -29,8 +29,14 @@ type Client struct {
 	token string
 }
 
-func NewClient(url, token string) *Client {
-	return &Client{URL: url, token: token}
+func NewClient(url, token string) (*Client, error) {
+	if url == "" {
+		return nil, fmt.Errorf("missing URL")
+	}
+	if token == "" {
+		return nil, fmt.Errorf("missing token")
+	}
+	return &Client{URL: url, token: token}, nil
 }
 
 func (c *Client) Networks() (Networks, error) {
