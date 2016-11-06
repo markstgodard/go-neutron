@@ -22,7 +22,7 @@ var _ = Describe("Neutron API", func() {
     {
       "id": "e53a3b67-0074-404c-90b5-52ae217c3587",
       "name": "public",
-      "description": "",
+      "description": "public network",
       "status": "ACTIVE",
       "subnets": [
         "3cc622c0-1ed8-470b-8d2b-081305df63b5",
@@ -78,8 +78,15 @@ var _ = Describe("Neutron API", func() {
 			networks, err := client.Networks()
 			Expect(err).ToNot(HaveOccurred())
 			Expect(networks).To(HaveLen(1))
+			Expect(networks[0].Name).To(Equal("public"))
+			Expect(networks[0].ID).To(Equal("e53a3b67-0074-404c-90b5-52ae217c3587"))
+			Expect(networks[0].Description).To(Equal("public network"))
+			Expect(networks[0].Status).To(Equal("ACTIVE"))
+			Expect(networks[0].Subnets).To(HaveLen(2))
+			Expect(networks[0].TenantID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
+			Expect(networks[0].MTU).To(Equal(1500))
+			Expect(networks[0].ProjectID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
 		})
-
 	})
 
 })

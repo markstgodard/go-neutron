@@ -10,14 +10,14 @@ import (
 const X_AUTH_TOKEN_HEADER = "X-Auth-Token"
 
 type Network struct {
-	id          string   `json:"id"`
-	name        string   `json:"name"`
-	description string   `json:"description"`
-	status      string   `json:"status"`
-	subnets     []string `json:"subnets"`
-	tenant_id   string   `json:"tenant_id"`
-	mtu         uint16   `json:"mtu"`
-	project_id  string   `json:"project_id"`
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Status      string   `json:"status"`
+	Subnets     []string `json:"subnets"`
+	TenantID    string   `json:"tenant_id"`
+	MTU         int      `json:"mtu"`
+	ProjectID   string   `json:"project_id"`
 }
 
 type getNetworks struct {
@@ -55,11 +55,11 @@ func (c *Client) Networks() ([]Network, error) {
 
 	body, err := ioutil.ReadAll(resp.Body)
 
-	var n getNetworks
-	err = json.Unmarshal(body, &n)
+	var gn getNetworks
+	err = json.Unmarshal(body, &gn)
 	if err != nil {
 		return nil, err
 	}
 
-	return n.Networks, nil
+	return gn.Networks, nil
 }
