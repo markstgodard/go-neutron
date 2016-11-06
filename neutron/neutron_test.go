@@ -42,10 +42,7 @@ var _ = Describe("Neutron API", func() {
 				fmt.Fprintln(w, networks)
 			}))
 
-			config := neutron.Config{
-				URL: server.URL,
-			}
-			client = neutron.NewClient(config)
+			client = neutron.NewClient(server.URL, "some-token")
 		})
 
 		AfterEach(func() {

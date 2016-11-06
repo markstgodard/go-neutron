@@ -2,9 +2,12 @@ package neutron
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 )
+
+const X_AUTH_TOKEN_HEADER = "X-Auth-Token"
 
 type Network struct {
 	id          string   `json:"id"`
@@ -16,24 +19,25 @@ type Network struct {
 	mtu         uint16   `json:"mtu"`
 	project_id  string   `json:"project_id"`
 }
+
 type Networks struct {
 	Networks []Network `json:"networks"`
 }
 
-type Config struct {
-	URL string
-}
-
 type Client struct {
-	config Config
+	URL   string
+	token string
 }
 
-func NewClient(config Config) *Client {
-	return &Client{config: config}
+func NewClient(url, token string) *Client {
+	return &Client{URL: url, token: token}
 }
 
 func (c *Client) Networks() (Networks, error) {
-	resp, err := http.Get(c.config.URL)
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/v2.0/networks", c.URL), nil)
+	req.Header.Add(X_AUTH_TOKEN_HEADER, c.token)
+	resp, err := client.Do(req)
 	if err != nil {
 		return Networks{}, err
 	}
