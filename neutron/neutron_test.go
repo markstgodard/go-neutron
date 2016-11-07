@@ -61,6 +61,35 @@ const networksByName = `{
   ]
 }`
 
+const createNetworkResp = `{
+  "network": {
+    "provider:physical_network": null,
+    "updated_at": "2016-11-07T05:58:51Z",
+    "revision_number": 3,
+    "port_security_enabled": true,
+    "mtu": 1450,
+    "id": "cc6c1929-6b26-4a1a-8680-3ea3dd09bfc6",
+    "router:external": false,
+    "availability_zone_hints": [],
+    "availability_zones": [],
+    "ipv4_address_scope": null,
+    "shared": false,
+    "project_id": "1f77bad08b454898803a3d9f9e3799ec",
+    "status": "ACTIVE",
+    "subnets": [],
+    "description": "a sample network",
+    "tags": [],
+    "ipv6_address_scope": null,
+    "provider:segmentation_id": 56,
+    "name": "sample_network",
+    "admin_state_up": true,
+    "tenant_id": "1f77bad08b454898803a3d9f9e3799ec",
+    "created_at": "2016-11-07T05:58:51Z",
+    "provider:network_type": "vxlan"
+  }
+}
+`
+
 const networksEmpty = `{
   "networks": []
 }`
@@ -128,6 +157,41 @@ var _ = Describe("Neutron API", func() {
 	})
 
 	Describe("Networks", func() {
+		Describe("CreateNetwork", func() {
+			BeforeEach(func() {
+				server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					fmt.Fprintln(w, createNetworkResp)
+				}))
+				var err error
+				client, err = neutron.NewClient(server.URL, "some-token")
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			AfterEach(func() {
+				server.Close()
+			})
+
+			Context("when network does not exist", func() {
+				It("creates a new network", func() {
+					net := neutron.Network{
+						Name:         "sample_network",
+						Description:  "a sample network",
+						AdminStateUp: true,
+					}
+					network, err := client.CreateNetwork(net)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(network.Name).To(Equal("sample_network"))
+					Expect(network.ID).To(Equal("cc6c1929-6b26-4a1a-8680-3ea3dd09bfc6"))
+					Expect(network.Description).To(Equal("a sample network"))
+					Expect(network.Status).To(Equal("ACTIVE"))
+					Expect(network.Subnets).To(HaveLen(0))
+					Expect(network.MTU).To(Equal(1450))
+					Expect(network.TenantID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
+					Expect(network.ProjectID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
+				})
+			})
+		})
+
 		Describe("Networks", func() {
 			BeforeEach(func() {
 				server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

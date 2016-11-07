@@ -1,6 +1,7 @@
 package neutron
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -22,6 +23,10 @@ func NewClient(url, token string) (*Client, error) {
 		return nil, fmt.Errorf("missing token")
 	}
 	return &Client{URL: url, token: token}, nil
+}
+
+func (c *Client) CreateNetwork(net Network) (Network, error) {
+	return c.postNetwork(fmt.Sprintf("%s/v2.0/networks", c.URL), net)
 }
 
 func (c *Client) Networks() ([]Network, error) {
@@ -58,6 +63,37 @@ func (c *Client) getNetworks(url string) ([]Network, error) {
 	}
 
 	return r.Networks, nil
+}
+
+func (c *Client) postNetwork(url string, net Network) (Network, error) {
+	client := &http.Client{}
+	jsonStr, err := json.Marshal(net)
+	if err != nil {
+		return Network{}, fmt.Errorf("invalid network: ", err)
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+	req.Header.Add(X_AUTH_TOKEN_HEADER, c.token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return Network{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return Network{}, fmt.Errorf("Error: %s\n", resp.Status)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+
+	var r GetNetwork
+	err = json.Unmarshal(body, &r)
+	if err != nil {
+		return Network{}, err
+	}
+
+	return r.Network, nil
 }
 
 func (c *Client) Subnets() ([]Subnet, error) {
