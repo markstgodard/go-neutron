@@ -22,7 +22,21 @@ if err != nil {
     log.Fatal(err)
 }
 
-for _, n := range networks {
-    fmt.Println(n)
+// get networks by name
+networks, err := client.NetworksByName("mynet")
+if err != nil {
+    log.Fatal(err)
+}
+
+// get subnets for owning project
+subnets, err := client.Subnets()
+if err != nil {
+    log.Fatal(err)
+}
+
+// get subnets for owning project by name
+subnets, err := client.SubnetsByName("mysubnet")
+if err != nil {
+    log.Fatal(err)
 }
 ```
