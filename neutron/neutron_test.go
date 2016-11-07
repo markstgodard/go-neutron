@@ -238,6 +238,30 @@ var _ = Describe("Neutron API", func() {
 				[]neutron.AllocationPool{{Start: "10.0.1.2", End: "10.0.1.254"}},
 			))
 		})
+
+		It("lists subnets owned by a project by name", func() {
+			subnets, err := client.SubnetsByName("cf-subnet1")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(subnets).To(HaveLen(1))
+			Expect(subnets[0].Name).To(Equal("cf-subnet1"))
+			Expect(subnets[0].ID).To(Equal("d087782e-3779-4982-b7ca-a4bde71b5aa5"))
+			Expect(subnets[0].SubnetPoolID).To(Equal("759f65e4-9f27-4370-b329-1b3fb6ca529e"))
+			Expect(subnets[0].ProjectID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
+			Expect(subnets[0].TenantID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
+			Expect(subnets[0].NetworkID).To(Equal("bd62af4c-bbe7-43fb-af21-29f3082fd734"))
+			Expect(subnets[0].IPVersion).To(Equal(4))
+			Expect(subnets[0].CIDR).To(Equal("10.0.1.0/24"))
+			Expect(subnets[0].AllocationPools).To(Equal(
+				[]neutron.AllocationPool{{Start: "10.0.1.2", End: "10.0.1.254"}},
+			))
+		})
+
+		Context("when subnet name is invalid", func() {
+			It("returns an error", func() {
+				_, err := client.SubnetsByName("")
+				Expect(err).To(MatchError("empty 'name' parameter"))
+			})
+		})
 	})
 
 })

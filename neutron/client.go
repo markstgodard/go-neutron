@@ -64,6 +64,13 @@ func (c *Client) Subnets() ([]Subnet, error) {
 	return c.getSubnets(fmt.Sprintf("%s/v2.0/subnets", c.URL))
 }
 
+func (c *Client) SubnetsByName(name string) ([]Subnet, error) {
+	if name == "" {
+		return nil, fmt.Errorf("empty 'name' parameter")
+	}
+	return c.getSubnets(fmt.Sprintf("%s/v2.0/subnets?name=%s", c.URL, name))
+}
+
 func (c *Client) getSubnets(url string) ([]Subnet, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", url, nil)
