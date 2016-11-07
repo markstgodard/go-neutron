@@ -25,38 +25,14 @@ func NewClient(url, token string) (*Client, error) {
 }
 
 func (c *Client) Networks() ([]Network, error) {
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/v2.0/networks", c.URL), nil)
-	req.Header.Add(X_AUTH_TOKEN_HEADER, c.token)
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Error: %s\n", resp.Status)
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-
-	var gn GetNetworks
-	err = json.Unmarshal(body, &gn)
-	if err != nil {
-		return nil, err
-	}
-
-	return gn.Networks, nil
+	return c.getNetworks(fmt.Sprintf("%s/v2.0/networks", c.URL))
 }
 
 func (c *Client) NetworksByName(name string) ([]Network, error) {
 	if name == "" {
 		return nil, fmt.Errorf("empty 'name' parameter")
 	}
-
-	url := fmt.Sprintf("%s/v2.0/networks?name=%s", c.URL, name)
-	return c.getNetworks(url)
-
+	return c.getNetworks(fmt.Sprintf("%s/v2.0/networks?name=%s", c.URL, name))
 }
 
 func (c *Client) getNetworks(url string) ([]Network, error) {
