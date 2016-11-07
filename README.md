@@ -16,6 +16,14 @@ if err != nil {
     log.Fatal(err)
 }
 
+// create network
+net := neutron.Network{
+  Name:         "sample_network",
+  Description:  "a sample network",
+  AdminStateUp: true,
+}
+network, err := client.CreateNetwork(net)
+
 // get networks
 networks, err := client.Networks()
 if err != nil {
