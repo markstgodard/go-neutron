@@ -11,13 +11,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Neutron API", func() {
-	var (
-		client *neutron.Client
-		server *httptest.Server
-	)
-
-	const networks = `{
+const networks = `{
   "networks": [
     {
       "id": "e53a3b67-0074-404c-90b5-52ae217c3587",
@@ -35,7 +29,7 @@ var _ = Describe("Neutron API", func() {
   ]
 }`
 
-	const networksByName = `{
+const networksByName = `{
   "networks": [
     {
       "provider:physical_network": null,
@@ -67,9 +61,47 @@ var _ = Describe("Neutron API", func() {
   ]
 }`
 
-	const networksEmpty = `{
+const networksEmpty = `{
   "networks": []
 }`
+
+const subnets = `{
+  "subnets": [
+    {
+      "service_types": [],
+      "description": "",
+      "enable_dhcp": true,
+      "network_id": "bd62af4c-bbe7-43fb-af21-29f3082fd734",
+      "tenant_id": "1f77bad08b454898803a3d9f9e3799ec",
+      "created_at": "2016-11-07T03:24:33Z",
+      "dns_nameservers": [],
+      "updated_at": "2016-11-07T03:24:33Z",
+      "gateway_ip": "10.0.1.1",
+      "ipv6_ra_mode": null,
+      "allocation_pools": [
+        {
+          "start": "10.0.1.2",
+          "end": "10.0.1.254"
+        }
+      ],
+      "host_routes": [],
+      "revision_number": 2,
+      "ip_version": 4,
+      "ipv6_address_mode": null,
+      "cidr": "10.0.1.0/24",
+      "project_id": "1f77bad08b454898803a3d9f9e3799ec",
+      "id": "d087782e-3779-4982-b7ca-a4bde71b5aa5",
+      "subnetpool_id": "759f65e4-9f27-4370-b329-1b3fb6ca529e",
+      "name": "cf-subnet1"
+    }
+  ]
+}`
+
+var _ = Describe("Neutron API", func() {
+	var (
+		client *neutron.Client
+		server *httptest.Server
+	)
 
 	Describe("NewClient", func() {
 		var err error
@@ -175,30 +207,37 @@ var _ = Describe("Neutron API", func() {
 		})
 	})
 
-	// Describe("Subnets", func() {
-	// 	BeforeEach(func() {
-	// 		var err error
-	// 		server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	// 			fmt.Fprintln(w, subnets)
-	// 		}))
+	Describe("Subnets", func() {
+		BeforeEach(func() {
+			var err error
+			server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				fmt.Fprintln(w, subnets)
+			}))
 
-	// 		client, err = neutron.NewClient(server.URL, "some-token")
-	// 		Expect(err).ToNot(HaveOccurred())
-	// 	})
+			client, err = neutron.NewClient(server.URL, "some-token")
+			Expect(err).ToNot(HaveOccurred())
+		})
 
-	// 	AfterEach(func() {
-	// 		server.Close()
-	// 	})
+		AfterEach(func() {
+			server.Close()
+		})
 
-	// 	It("can list subnets", func() {
-	// 		subnets, err := client.Subnets()
-	// 		Expect(err).ToNot(HaveOccurred())
-	// 		Expect(subnets).To(HaveLen(1))
-	// 		Expect(subnets[0].Name).To(Equal("public"))
-	// 		Expect(subnets[0].ID).To(Equal("e53a3b67-0074-404c-90b5-52ae217c3587"))
-	// 		Expect(subnets[0].Description).To(Equal("public network"))
-	// 		Expect(networks[0].ProjectID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
-	// 	})
-	// })
+		It("lists all subnets owned by a project", func() {
+			subnets, err := client.Subnets()
+			Expect(err).ToNot(HaveOccurred())
+			Expect(subnets).To(HaveLen(1))
+			Expect(subnets[0].Name).To(Equal("cf-subnet1"))
+			Expect(subnets[0].ID).To(Equal("d087782e-3779-4982-b7ca-a4bde71b5aa5"))
+			Expect(subnets[0].SubnetPoolID).To(Equal("759f65e4-9f27-4370-b329-1b3fb6ca529e"))
+			Expect(subnets[0].ProjectID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
+			Expect(subnets[0].TenantID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
+			Expect(subnets[0].NetworkID).To(Equal("bd62af4c-bbe7-43fb-af21-29f3082fd734"))
+			Expect(subnets[0].IPVersion).To(Equal(4))
+			Expect(subnets[0].CIDR).To(Equal("10.0.1.0/24"))
+			Expect(subnets[0].AllocationPools).To(Equal(
+				[]neutron.AllocationPool{{Start: "10.0.1.2", End: "10.0.1.254"}},
+			))
+		})
+	})
 
 })

@@ -51,11 +51,40 @@ func (c *Client) getNetworks(url string) ([]Network, error) {
 
 	body, err := ioutil.ReadAll(resp.Body)
 
-	var gn GetNetworks
-	err = json.Unmarshal(body, &gn)
+	var r GetNetworks
+	err = json.Unmarshal(body, &r)
 	if err != nil {
 		return nil, err
 	}
 
-	return gn.Networks, nil
+	return r.Networks, nil
+}
+
+func (c *Client) Subnets() ([]Subnet, error) {
+	return c.getSubnets(fmt.Sprintf("%s/v2.0/subnets", c.URL))
+}
+
+func (c *Client) getSubnets(url string) ([]Subnet, error) {
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	req.Header.Add(X_AUTH_TOKEN_HEADER, c.token)
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("Error: %s\n", resp.Status)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+
+	var r GetSubnets
+	err = json.Unmarshal(body, &r)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Subnets, nil
 }
