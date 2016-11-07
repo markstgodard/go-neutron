@@ -23,6 +23,9 @@ net := neutron.Network{
   AdminStateUp: true,
 }
 network, err := client.CreateNetwork(net)
+if err != nil {
+    log.Fatal(err)
+}
 
 // get networks
 networks, err := client.Networks()
