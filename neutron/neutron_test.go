@@ -67,6 +67,10 @@ var _ = Describe("Neutron API", func() {
   ]
 }`
 
+	const networksEmpty = `{
+  "networks": []
+}`
+
 	Describe("NewClient", func() {
 		var err error
 
@@ -92,51 +96,82 @@ var _ = Describe("Neutron API", func() {
 	})
 
 	Describe("Networks", func() {
-
-		BeforeEach(func() {
-			var err error
-			server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.URL.Query().Get("name") != "" {
-					fmt.Fprintln(w, networksByName)
-				} else {
+		Describe("Networks", func() {
+			BeforeEach(func() {
+				server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					fmt.Fprintln(w, networks)
-				}
-			}))
+				}))
+				var err error
+				client, err = neutron.NewClient(server.URL, "some-token")
+				Expect(err).ToNot(HaveOccurred())
+			})
 
-			client, err = neutron.NewClient(server.URL, "some-token")
-			Expect(err).ToNot(HaveOccurred())
+			AfterEach(func() {
+				server.Close()
+			})
+
+			It("lists networks", func() {
+				networks, err := client.Networks()
+				Expect(err).ToNot(HaveOccurred())
+				Expect(networks).To(HaveLen(1))
+				Expect(networks[0].Name).To(Equal("public"))
+				Expect(networks[0].ID).To(Equal("e53a3b67-0074-404c-90b5-52ae217c3587"))
+				Expect(networks[0].Description).To(Equal("public network"))
+				Expect(networks[0].Status).To(Equal("ACTIVE"))
+				Expect(networks[0].Subnets).To(HaveLen(2))
+				Expect(networks[0].TenantID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
+				Expect(networks[0].MTU).To(Equal(1500))
+				Expect(networks[0].ProjectID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
+			})
 		})
 
-		AfterEach(func() {
-			server.Close()
-		})
+		Describe("NetworksByName", func() {
+			BeforeEach(func() {
+				server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					switch r.URL.Query().Get("name") {
+					case "network1":
+						fmt.Fprintln(w, networksByName)
+					default:
+						fmt.Fprintln(w, networksEmpty)
+					}
+				}))
+				var err error
+				client, err = neutron.NewClient(server.URL, "some-token")
+				Expect(err).ToNot(HaveOccurred())
+			})
 
-		It("can list networks", func() {
-			networks, err := client.Networks()
-			Expect(err).ToNot(HaveOccurred())
-			Expect(networks).To(HaveLen(1))
-			Expect(networks[0].Name).To(Equal("public"))
-			Expect(networks[0].ID).To(Equal("e53a3b67-0074-404c-90b5-52ae217c3587"))
-			Expect(networks[0].Description).To(Equal("public network"))
-			Expect(networks[0].Status).To(Equal("ACTIVE"))
-			Expect(networks[0].Subnets).To(HaveLen(2))
-			Expect(networks[0].TenantID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
-			Expect(networks[0].MTU).To(Equal(1500))
-			Expect(networks[0].ProjectID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
-		})
+			AfterEach(func() {
+				server.Close()
+			})
 
-		It("can list networks by name", func() {
-			networks, err := client.NetworksByName("network1")
-			Expect(err).ToNot(HaveOccurred())
-			Expect(networks).To(HaveLen(1))
-			Expect(networks[0].Name).To(Equal("network1"))
-			Expect(networks[0].ID).To(Equal("bd62af4c-bbe7-43fb-af21-29f3082fd734"))
-			Expect(networks[0].Description).To(Equal(""))
-			Expect(networks[0].Status).To(Equal("ACTIVE"))
-			Expect(networks[0].Subnets).To(HaveLen(1))
-			Expect(networks[0].TenantID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
-			Expect(networks[0].MTU).To(Equal(1450))
-			Expect(networks[0].ProjectID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
+			It("list networks by name", func() {
+				networks, err := client.NetworksByName("network1")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(networks).To(HaveLen(1))
+				Expect(networks[0].Name).To(Equal("network1"))
+				Expect(networks[0].ID).To(Equal("bd62af4c-bbe7-43fb-af21-29f3082fd734"))
+				Expect(networks[0].Description).To(Equal(""))
+				Expect(networks[0].Status).To(Equal("ACTIVE"))
+				Expect(networks[0].Subnets).To(HaveLen(1))
+				Expect(networks[0].TenantID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
+				Expect(networks[0].MTU).To(Equal(1450))
+				Expect(networks[0].ProjectID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
+			})
+
+			Context("when network name is invalid", func() {
+				It("returns an error", func() {
+					_, err := client.NetworksByName("")
+					Expect(err).To(MatchError("empty 'name' parameter"))
+				})
+			})
+
+			Context("when network does not exist", func() {
+				It("returns empty when not found by name", func() {
+					networks, err := client.NetworksByName("does-not-exist")
+					Expect(err).ToNot(HaveOccurred())
+					Expect(networks).To(HaveLen(0))
+				})
+			})
 		})
 	})
 
