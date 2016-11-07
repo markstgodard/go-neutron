@@ -35,6 +35,38 @@ var _ = Describe("Neutron API", func() {
   ]
 }`
 
+	const networksByName = `{
+  "networks": [
+    {
+      "provider:physical_network": null,
+      "ipv6_address_scope": null,
+      "revision_number": 5,
+      "port_security_enabled": true,
+      "mtu": 1450,
+      "id": "bd62af4c-bbe7-43fb-af21-29f3082fd734",
+      "router:external": false,
+      "availability_zone_hints": [],
+      "availability_zones": [],
+      "ipv4_address_scope": null,
+      "shared": false,
+      "project_id": "1f77bad08b454898803a3d9f9e3799ec",
+      "status": "ACTIVE",
+      "subnets": [
+        "d087782e-3779-4982-b7ca-a4bde71b5aa5"
+      ],
+      "description": "",
+      "tags": [],
+      "updated_at": "2016-11-07T03:24:33Z",
+      "provider:segmentation_id": 16,
+      "name": "network1",
+      "admin_state_up": true,
+      "tenant_id": "1f77bad08b454898803a3d9f9e3799ec",
+      "created_at": "2016-11-07T03:24:33Z",
+      "provider:network_type": "vxlan"
+    }
+  ]
+}`
+
 	Describe("NewClient", func() {
 		var err error
 
@@ -60,10 +92,15 @@ var _ = Describe("Neutron API", func() {
 	})
 
 	Describe("Networks", func() {
+
 		BeforeEach(func() {
 			var err error
 			server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				fmt.Fprintln(w, networks)
+				if r.URL.Query().Get("name") != "" {
+					fmt.Fprintln(w, networksByName)
+				} else {
+					fmt.Fprintln(w, networks)
+				}
 			}))
 
 			client, err = neutron.NewClient(server.URL, "some-token")
@@ -87,6 +124,46 @@ var _ = Describe("Neutron API", func() {
 			Expect(networks[0].MTU).To(Equal(1500))
 			Expect(networks[0].ProjectID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
 		})
+
+		It("can list networks by name", func() {
+			networks, err := client.NetworksByName("network1")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(networks).To(HaveLen(1))
+			Expect(networks[0].Name).To(Equal("network1"))
+			Expect(networks[0].ID).To(Equal("bd62af4c-bbe7-43fb-af21-29f3082fd734"))
+			Expect(networks[0].Description).To(Equal(""))
+			Expect(networks[0].Status).To(Equal("ACTIVE"))
+			Expect(networks[0].Subnets).To(HaveLen(1))
+			Expect(networks[0].TenantID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
+			Expect(networks[0].MTU).To(Equal(1450))
+			Expect(networks[0].ProjectID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
+		})
 	})
+
+	// Describe("Subnets", func() {
+	// 	BeforeEach(func() {
+	// 		var err error
+	// 		server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// 			fmt.Fprintln(w, subnets)
+	// 		}))
+
+	// 		client, err = neutron.NewClient(server.URL, "some-token")
+	// 		Expect(err).ToNot(HaveOccurred())
+	// 	})
+
+	// 	AfterEach(func() {
+	// 		server.Close()
+	// 	})
+
+	// 	It("can list subnets", func() {
+	// 		subnets, err := client.Subnets()
+	// 		Expect(err).ToNot(HaveOccurred())
+	// 		Expect(subnets).To(HaveLen(1))
+	// 		Expect(subnets[0].Name).To(Equal("public"))
+	// 		Expect(subnets[0].ID).To(Equal("e53a3b67-0074-404c-90b5-52ae217c3587"))
+	// 		Expect(subnets[0].Description).To(Equal("public network"))
+	// 		Expect(networks[0].ProjectID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
+	// 	})
+	// })
 
 })
