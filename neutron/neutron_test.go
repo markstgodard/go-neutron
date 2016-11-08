@@ -160,7 +160,8 @@ var _ = Describe("Neutron API", func() {
 		Describe("CreateNetwork", func() {
 			BeforeEach(func() {
 				server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					fmt.Fprintln(w, createNetworkResp)
+					w.WriteHeader(http.StatusCreated)
+					w.Write([]byte(createNetworkResp))
 				}))
 				var err error
 				client, err = neutron.NewClient(server.URL, "some-token")

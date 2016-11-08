@@ -67,7 +67,7 @@ func (c *Client) getNetworks(url string) ([]Network, error) {
 
 func (c *Client) postNetwork(url string, net Network) (Network, error) {
 	client := &http.Client{}
-	jsonStr, err := json.Marshal(net)
+	jsonStr, err := json.Marshal(SingleNetwork{Network: net})
 	if err != nil {
 		return Network{}, fmt.Errorf("invalid network: ", err)
 	}
@@ -81,17 +81,19 @@ func (c *Client) postNetwork(url string, net Network) (Network, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return Network{}, fmt.Errorf("Error: %s\n", resp.Status)
-	}
-
 	body, err := ioutil.ReadAll(resp.Body)
-
-	var r GetNetwork
-	err = json.Unmarshal(body, &r)
 	if err != nil {
 		return Network{}, err
 	}
+
+	// fmt.Printf("resp body: %s\n", body)
+
+	if resp.StatusCode != http.StatusCreated {
+		return Network{}, fmt.Errorf("Error: %s\n", resp.Status)
+	}
+
+	var r SingleNetwork
+	err = json.Unmarshal(body, &r)
 
 	return r.Network, nil
 }
