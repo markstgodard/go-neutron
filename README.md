@@ -52,7 +52,7 @@ if err != nil {
     log.Fatal(err)
 }
 
-
+// create subnet
 subnet := neutron.Subnet{
     NetworkID: "network1",
     IPVersion: 4,
