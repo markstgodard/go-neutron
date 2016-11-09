@@ -1,19 +1,19 @@
 package neutron
 
 type Subnet struct {
-	ID              string           `json:"id"`
-	Name            string           `json:"name"`
-	SubnetPoolID    string           `json:"subnetpool_id"`
-	EnableDHCP      bool             `json:"enable_dhcp"`
+	ID              string           `json:"id,omitempty"`
+	Name            string           `json:"name,omitempty"`
+	SubnetPoolID    string           `json:"subnetpool_id,omitempty"`
+	EnableDHCP      bool             `json:"enable_dhcp,omitempty"`
 	NetworkID       string           `json:"network_id"`
-	SegmentID       string           `json:"segment_id"`
-	ProjectID       string           `json:"project_id"`
-	TenantID        string           `json:"tenant_id"`
-	DNSNameservers  []string         `json:"dns_nameservers"`
-	AllocationPools []AllocationPool `json:"allocation_pools"`
-	HostRoutes      []string         `json:"host_routes"`
+	SegmentID       string           `json:"segment_id,omitempty"`
+	ProjectID       string           `json:"project_id,omitempty"`
+	TenantID        string           `json:"tenant_id,omitempty"`
+	DNSNameservers  []string         `json:"dns_nameservers,omitempty"`
+	AllocationPools []AllocationPool `json:"allocation_pools,omitempty"`
+	HostRoutes      []string         `json:"host_routes,omitempty"`
 	IPVersion       int              `json:"ip_version"`
-	GatewayIP       string           `json:"gateway_ip"`
+	GatewayIP       string           `json:"gateway_ip,omitempty"`
 	CIDR            string           `json:"cidr"`
 }
 
@@ -24,4 +24,8 @@ type AllocationPool struct {
 
 type GetSubnets struct {
 	Subnets []Subnet `json:"subnets"`
+}
+
+type SingleSubnet struct {
+	Subnet Subnet `json:"subnet"`
 }

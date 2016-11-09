@@ -94,6 +94,9 @@ func (c *Client) postNetwork(url string, net Network) (Network, error) {
 
 	var r SingleNetwork
 	err = json.Unmarshal(body, &r)
+	if err != nil {
+		return Network{}, err
+	}
 
 	return r.Network, nil
 }
@@ -132,4 +135,43 @@ func (c *Client) getSubnets(url string) ([]Subnet, error) {
 	}
 
 	return r.Subnets, nil
+}
+func (c *Client) CreateSubnet(s Subnet) (Subnet, error) {
+	return c.postSubnet(fmt.Sprintf("%s/v2.0/subnets", c.URL), s)
+}
+
+func (c *Client) postSubnet(url string, s Subnet) (Subnet, error) {
+	client := &http.Client{}
+	jsonStr, err := json.Marshal(SingleSubnet{Subnet: s})
+	if err != nil {
+		return Subnet{}, fmt.Errorf("invalid subnet: ", err)
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+	req.Header.Add(X_AUTH_TOKEN_HEADER, c.token)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return Subnet{}, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return Subnet{}, err
+	}
+
+	// fmt.Printf("resp body: %s\n", body)
+
+	if resp.StatusCode != http.StatusCreated {
+		return Subnet{}, fmt.Errorf("Error: %s\n", resp.Status)
+	}
+
+	var r SingleSubnet
+	err = json.Unmarshal(body, &r)
+	if err != nil {
+		return Subnet{}, err
+	}
+
+	return r.Subnet, nil
 }

@@ -89,6 +89,19 @@ const createNetworkResp = `{
   }
 }
 `
+const createSubnetResp = `{
+  "subnet": {
+    "name": "",
+    "network_id": "ed2e3c10-2e43-4297-9006-2863a2d1abbc",
+    "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
+    "allocation_pools": [{"start": "10.0.3.20", "end": "10.0.3.150"}],
+    "gateway_ip": "10.0.3.1",
+    "ip_version": 4,
+    "cidr": "10.0.3.0/24",
+    "id": "9436e561-47bf-436a-b1f1-fe23a926e031",
+    "enable_dhcp": true
+  }
+}`
 
 const networksEmpty = `{
   "networks": []
@@ -273,58 +286,99 @@ var _ = Describe("Neutron API", func() {
 	})
 
 	Describe("Subnets", func() {
-		BeforeEach(func() {
-			var err error
-			server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				fmt.Fprintln(w, subnets)
-			}))
+		Describe("CreateSubnet", func() {
+			BeforeEach(func() {
+				server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusCreated)
+					w.Write([]byte(createSubnetResp))
+				}))
+				var err error
+				client, err = neutron.NewClient(server.URL, "some-token")
+				Expect(err).ToNot(HaveOccurred())
+			})
 
-			client, err = neutron.NewClient(server.URL, "some-token")
-			Expect(err).ToNot(HaveOccurred())
+			AfterEach(func() {
+				server.Close()
+			})
+
+			Context("when subnet does not exist", func() {
+				It("creates a new subnet", func() {
+					subnet := neutron.Subnet{
+						NetworkID: "network1",
+						IPVersion: 4,
+						CIDR:      "10.0.3.0/24",
+						AllocationPools: []neutron.AllocationPool{
+							{
+								Start: "10.0.3.20",
+								End:   "10.0.3.150",
+							},
+						},
+					}
+
+					sn, err := client.CreateSubnet(subnet)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(sn.ID).To(Equal("9436e561-47bf-436a-b1f1-fe23a926e031"))
+					Expect(sn.NetworkID).To(Equal("ed2e3c10-2e43-4297-9006-2863a2d1abbc"))
+					Expect(sn.CIDR).To(Equal("10.0.3.0/24"))
+					Expect(sn.IPVersion).To(Equal(4))
+				})
+			})
 		})
 
-		AfterEach(func() {
-			server.Close()
-		})
+		Describe("Subnets", func() {
+			BeforeEach(func() {
+				var err error
+				server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					fmt.Fprintln(w, subnets)
+				}))
 
-		It("lists all subnets owned by a project", func() {
-			subnets, err := client.Subnets()
-			Expect(err).ToNot(HaveOccurred())
-			Expect(subnets).To(HaveLen(1))
-			Expect(subnets[0].Name).To(Equal("cf-subnet1"))
-			Expect(subnets[0].ID).To(Equal("d087782e-3779-4982-b7ca-a4bde71b5aa5"))
-			Expect(subnets[0].SubnetPoolID).To(Equal("759f65e4-9f27-4370-b329-1b3fb6ca529e"))
-			Expect(subnets[0].ProjectID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
-			Expect(subnets[0].TenantID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
-			Expect(subnets[0].NetworkID).To(Equal("bd62af4c-bbe7-43fb-af21-29f3082fd734"))
-			Expect(subnets[0].IPVersion).To(Equal(4))
-			Expect(subnets[0].CIDR).To(Equal("10.0.1.0/24"))
-			Expect(subnets[0].AllocationPools).To(Equal(
-				[]neutron.AllocationPool{{Start: "10.0.1.2", End: "10.0.1.254"}},
-			))
-		})
+				client, err = neutron.NewClient(server.URL, "some-token")
+				Expect(err).ToNot(HaveOccurred())
+			})
 
-		It("lists subnets owned by a project by name", func() {
-			subnets, err := client.SubnetsByName("cf-subnet1")
-			Expect(err).ToNot(HaveOccurred())
-			Expect(subnets).To(HaveLen(1))
-			Expect(subnets[0].Name).To(Equal("cf-subnet1"))
-			Expect(subnets[0].ID).To(Equal("d087782e-3779-4982-b7ca-a4bde71b5aa5"))
-			Expect(subnets[0].SubnetPoolID).To(Equal("759f65e4-9f27-4370-b329-1b3fb6ca529e"))
-			Expect(subnets[0].ProjectID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
-			Expect(subnets[0].TenantID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
-			Expect(subnets[0].NetworkID).To(Equal("bd62af4c-bbe7-43fb-af21-29f3082fd734"))
-			Expect(subnets[0].IPVersion).To(Equal(4))
-			Expect(subnets[0].CIDR).To(Equal("10.0.1.0/24"))
-			Expect(subnets[0].AllocationPools).To(Equal(
-				[]neutron.AllocationPool{{Start: "10.0.1.2", End: "10.0.1.254"}},
-			))
-		})
+			AfterEach(func() {
+				server.Close()
+			})
 
-		Context("when subnet name is invalid", func() {
-			It("returns an error", func() {
-				_, err := client.SubnetsByName("")
-				Expect(err).To(MatchError("empty 'name' parameter"))
+			It("lists all subnets owned by a project", func() {
+				subnets, err := client.Subnets()
+				Expect(err).ToNot(HaveOccurred())
+				Expect(subnets).To(HaveLen(1))
+				Expect(subnets[0].Name).To(Equal("cf-subnet1"))
+				Expect(subnets[0].ID).To(Equal("d087782e-3779-4982-b7ca-a4bde71b5aa5"))
+				Expect(subnets[0].SubnetPoolID).To(Equal("759f65e4-9f27-4370-b329-1b3fb6ca529e"))
+				Expect(subnets[0].ProjectID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
+				Expect(subnets[0].TenantID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
+				Expect(subnets[0].NetworkID).To(Equal("bd62af4c-bbe7-43fb-af21-29f3082fd734"))
+				Expect(subnets[0].IPVersion).To(Equal(4))
+				Expect(subnets[0].CIDR).To(Equal("10.0.1.0/24"))
+				Expect(subnets[0].AllocationPools).To(Equal(
+					[]neutron.AllocationPool{{Start: "10.0.1.2", End: "10.0.1.254"}},
+				))
+			})
+
+			It("lists subnets owned by a project by name", func() {
+				subnets, err := client.SubnetsByName("cf-subnet1")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(subnets).To(HaveLen(1))
+				Expect(subnets[0].Name).To(Equal("cf-subnet1"))
+				Expect(subnets[0].ID).To(Equal("d087782e-3779-4982-b7ca-a4bde71b5aa5"))
+				Expect(subnets[0].SubnetPoolID).To(Equal("759f65e4-9f27-4370-b329-1b3fb6ca529e"))
+				Expect(subnets[0].ProjectID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
+				Expect(subnets[0].TenantID).To(Equal("1f77bad08b454898803a3d9f9e3799ec"))
+				Expect(subnets[0].NetworkID).To(Equal("bd62af4c-bbe7-43fb-af21-29f3082fd734"))
+				Expect(subnets[0].IPVersion).To(Equal(4))
+				Expect(subnets[0].CIDR).To(Equal("10.0.1.0/24"))
+				Expect(subnets[0].AllocationPools).To(Equal(
+					[]neutron.AllocationPool{{Start: "10.0.1.2", End: "10.0.1.254"}},
+				))
+			})
+
+			Context("when subnet name is invalid", func() {
+				It("returns an error", func() {
+					_, err := client.SubnetsByName("")
+					Expect(err).To(MatchError("empty 'name' parameter"))
+				})
 			})
 		})
 	})
