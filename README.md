@@ -22,6 +22,7 @@ net := neutron.Network{
   Description:  "a sample network",
   AdminStateUp: true,
 }
+
 network, err := client.CreateNetwork(net)
 if err != nil {
     log.Fatal(err)
@@ -47,6 +48,24 @@ if err != nil {
 
 // get subnets for owning project by name
 subnets, err := client.SubnetsByName("mysubnet")
+if err != nil {
+    log.Fatal(err)
+}
+
+
+subnet := neutron.Subnet{
+    NetworkID: "network1",
+    IPVersion: 4,
+    CIDR:      "10.0.3.0/24",
+    AllocationPools: []neutron.AllocationPool{
+      {
+        Start: "10.0.3.20",
+        End:   "10.0.3.150",
+      },
+    },
+}
+
+_, err := client.CreateSubnet(subnet)
 if err != nil {
     log.Fatal(err)
 }
