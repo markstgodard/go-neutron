@@ -55,6 +55,8 @@ func (c *Client) doRequest(r request) (response, error) {
 		return response{}, err
 	}
 
+	// fmt.Printf("resp: %s\n", body)
+
 	if resp.StatusCode != r.OkStatusCode {
 		return response{}, fmt.Errorf("Error: %s\n", resp.Status)
 	}
