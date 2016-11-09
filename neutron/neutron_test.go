@@ -103,6 +103,26 @@ const createSubnetResp = `{
   }
 }`
 
+const createPortResp = `{
+    "port": {
+        "admin_state_up": true,
+        "device_id": "d6b4d3a5-c700-476f-b609-1493dd9dadc0",
+        "device_owner": "",
+        "fixed_ips": [
+            {
+                "ip_address": "192.168.111.4",
+                "subnet_id": "22b44fc2-4ffb-4de4-b0f9-69d58b37ae27"
+            }
+        ],
+        "id": "ebe69f1e-bc26-4db5-bed0-c0afb4afe3db",
+        "mac_address": "fa:16:3e:a6:50:c1",
+        "name": "port1",
+        "network_id": "6aeaf34a-c482-4bd3-9dc3-7faf36412f12",
+        "status": "ACTIVE",
+        "tenant_id": "cf1a5775e766426cb1968766d0191908"
+    }
+}`
+
 const networksEmpty = `{
   "networks": []
 }`
@@ -406,4 +426,52 @@ var _ = Describe("Neutron API", func() {
 		})
 	})
 
+	Describe("Ports", func() {
+		Describe("CreatePort", func() {
+			BeforeEach(func() {
+				server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusCreated)
+					w.Write([]byte(createPortResp))
+				}))
+				var err error
+				client, err = neutron.NewClient(server.URL, "some-token")
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			AfterEach(func() {
+				server.Close()
+			})
+
+			Context("when port does not exist", func() {
+				It("creates a new port", func() {
+					port := neutron.Port{
+						NetworkID:    "6aeaf34a-c482-4bd3-9dc3-7faf36412f12",
+						Name:         "port1",
+						DeviceID:     "d6b4d3a5-c700-476f-b609-1493dd9dadc0",
+						AdminStateUp: true,
+					}
+
+					p, err := client.CreatePort(port)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(p.ID).To(Equal("ebe69f1e-bc26-4db5-bed0-c0afb4afe3db"))
+					Expect(p.Name).To(Equal("port1"))
+					Expect(p.NetworkID).To(Equal("6aeaf34a-c482-4bd3-9dc3-7faf36412f12"))
+					Expect(p.TenantID).To(Equal("cf1a5775e766426cb1968766d0191908"))
+					Expect(p.Status).To(Equal("ACTIVE"))
+					Expect(p.AdminStateUp).To(BeTrue())
+					Expect(p.MacAddress).To(Equal("fa:16:3e:a6:50:c1"))
+					Expect(p.DeviceOwner).To(Equal(""))
+					Expect(p.DeviceID).To(Equal("d6b4d3a5-c700-476f-b609-1493dd9dadc0"))
+					Expect(p.FixedIPs).To(Equal(
+						[]neutron.FixedIP{
+							{
+								IPAddress: "192.168.111.4",
+								SubnetID:  "22b44fc2-4ffb-4de4-b0f9-69d58b37ae27",
+							},
+						},
+					))
+				})
+			})
+		})
+	})
 })

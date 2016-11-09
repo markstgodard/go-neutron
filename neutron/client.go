@@ -206,3 +206,29 @@ func (c *Client) CreateSubnet(s Subnet) (Subnet, error) {
 
 	return r.Subnet, nil
 }
+
+func (c *Client) CreatePort(p Port) (Port, error) {
+	jsonStr, err := json.Marshal(SinglePort{Port: p})
+	if err != nil {
+		return Port{}, fmt.Errorf("invalid port: ", err)
+	}
+
+	resp, err := c.doRequest(request{
+		URL:          fmt.Sprintf("%s/v2.0/ports", c.URL),
+		Method:       "POST",
+		Body:         jsonStr,
+		OkStatusCode: http.StatusCreated,
+	})
+
+	if err != nil {
+		return Port{}, err
+	}
+
+	var r SinglePort
+	err = json.Unmarshal(resp.Body, &r)
+	if err != nil {
+		return Port{}, err
+	}
+
+	return r.Port, nil
+}
