@@ -232,3 +232,18 @@ func (c *Client) CreatePort(p Port) (Port, error) {
 
 	return r.Port, nil
 }
+
+func (c *Client) DeletePort(id string) error {
+	if id == "" {
+		return fmt.Errorf("empty 'id' parameter")
+	}
+	_, err := c.doRequest(request{
+		URL:          fmt.Sprintf("%s/v2.0/ports/%s", c.URL, id),
+		Method:       "DELETE",
+		OkStatusCode: http.StatusNoContent,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}

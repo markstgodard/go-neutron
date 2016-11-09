@@ -473,5 +473,27 @@ var _ = Describe("Neutron API", func() {
 				})
 			})
 		})
+
+		Describe("DeletePort", func() {
+			BeforeEach(func() {
+				server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusNoContent)
+				}))
+				var err error
+				client, err = neutron.NewClient(server.URL, "some-token")
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			AfterEach(func() {
+				server.Close()
+			})
+
+			Context("when port exists", func() {
+				It("deletes the port", func() {
+					err := client.DeletePort("port1")
+					Expect(err).ToNot(HaveOccurred())
+				})
+			})
+		})
 	})
 })

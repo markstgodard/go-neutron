@@ -70,6 +70,25 @@ if err != nil {
     log.Fatal(err)
 }
 
+// create port
+port := neutron.Port{
+  NetworkID:    "network1",
+  Name:         "port1",
+  DeviceID:     "d6b4d3a5-c700-476f-b609-1493dd9dadc0",
+  AdminStateUp: true,
+}
+
+p, err := client.CreatePort(port)
+if err != nil {
+    log.Fatal(err)
+}
+
+// delete port
+err := client.DeletePort("port1")
+if err != nil {
+    log.Fatal(err)
+}
+
 // delete network
 err := client.DeleteNetwork("network1")
 if err != nil {
