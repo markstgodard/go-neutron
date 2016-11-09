@@ -69,4 +69,10 @@ _, err := client.CreateSubnet(subnet)
 if err != nil {
     log.Fatal(err)
 }
+
+// delete network
+err := client.DeleteNetwork("network1")
+if err != nil {
+    log.Fatal(err)
+}
 ```
