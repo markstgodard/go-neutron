@@ -86,6 +86,21 @@ func (c *Client) CreateNetwork(net Network) (Network, error) {
 	return r.Network, nil
 }
 
+func (c *Client) DeleteNetwork(id string) error {
+	if id == "" {
+		return fmt.Errorf("empty 'id' parameter")
+	}
+	_, err := c.doRequest(request{
+		URL:          fmt.Sprintf("%s/v2.0/networks/%s", c.URL, id),
+		Method:       "DELETE",
+		OkStatusCode: http.StatusNoContent,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (c *Client) Networks() ([]Network, error) {
 	resp, err := c.doRequest(request{
 		URL:          fmt.Sprintf("%s/v2.0/networks", c.URL),

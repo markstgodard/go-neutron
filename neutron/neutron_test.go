@@ -283,6 +283,29 @@ var _ = Describe("Neutron API", func() {
 				})
 			})
 		})
+
+		Describe("DeleteNetwork", func() {
+			BeforeEach(func() {
+				server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(http.StatusNoContent)
+				}))
+				var err error
+				client, err = neutron.NewClient(server.URL, "some-token")
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			AfterEach(func() {
+				server.Close()
+			})
+
+			Context("when network exists", func() {
+				It("deletes a network", func() {
+					err := client.DeleteNetwork("network-id-1")
+					Expect(err).ToNot(HaveOccurred())
+				})
+			})
+		})
+
 	})
 
 	Describe("Subnets", func() {
