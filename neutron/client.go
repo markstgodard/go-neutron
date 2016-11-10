@@ -41,6 +41,10 @@ func (c *Client) doRequest(r request) (response, error) {
 	client := &http.Client{}
 
 	req, err := http.NewRequest(r.Method, r.URL, bytes.NewBuffer(r.Body))
+	if err != nil {
+		return response{}, err
+	}
+
 	req.Header.Add(X_AUTH_TOKEN_HEADER, c.token)
 	req.Header.Set("Content-Type", "application/json")
 
