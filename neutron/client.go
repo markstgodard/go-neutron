@@ -73,7 +73,7 @@ func (c *Client) CreateNetwork(net Network) (Network, error) {
 
 	resp, err := c.doRequest(request{
 		URL:          fmt.Sprintf("%s/v2.0/networks", c.URL),
-		Method:       "POST",
+		Method:       http.MethodPost,
 		Body:         jsonStr,
 		OkStatusCode: http.StatusCreated,
 	})
@@ -96,7 +96,7 @@ func (c *Client) DeleteNetwork(id string) error {
 	}
 	_, err := c.doRequest(request{
 		URL:          fmt.Sprintf("%s/v2.0/networks/%s", c.URL, id),
-		Method:       "DELETE",
+		Method:       http.MethodDelete,
 		OkStatusCode: http.StatusNoContent,
 	})
 	if err != nil {
@@ -108,7 +108,7 @@ func (c *Client) DeleteNetwork(id string) error {
 func (c *Client) Networks() ([]Network, error) {
 	resp, err := c.doRequest(request{
 		URL:          fmt.Sprintf("%s/v2.0/networks", c.URL),
-		Method:       "GET",
+		Method:       http.MethodGet,
 		OkStatusCode: http.StatusOK,
 	})
 	if err != nil {
@@ -130,7 +130,7 @@ func (c *Client) NetworksByName(name string) ([]Network, error) {
 
 	resp, err := c.doRequest(request{
 		URL:          fmt.Sprintf("%s/v2.0/networks?name=%s", c.URL, name),
-		Method:       "GET",
+		Method:       http.MethodGet,
 		OkStatusCode: http.StatusOK,
 	})
 	if err != nil {
@@ -148,7 +148,7 @@ func (c *Client) NetworksByName(name string) ([]Network, error) {
 func (c *Client) Subnets() ([]Subnet, error) {
 	resp, err := c.doRequest(request{
 		URL:          fmt.Sprintf("%s/v2.0/subnets", c.URL),
-		Method:       "GET",
+		Method:       http.MethodGet,
 		OkStatusCode: http.StatusOK,
 	})
 	if err != nil {
@@ -170,7 +170,7 @@ func (c *Client) SubnetsByName(name string) ([]Subnet, error) {
 
 	resp, err := c.doRequest(request{
 		URL:          fmt.Sprintf("%s/v2.0/subnets?name=%s", c.URL, name),
-		Method:       "GET",
+		Method:       http.MethodGet,
 		OkStatusCode: http.StatusOK,
 	})
 	if err != nil {
@@ -193,7 +193,7 @@ func (c *Client) CreateSubnet(s Subnet) (Subnet, error) {
 
 	resp, err := c.doRequest(request{
 		URL:          fmt.Sprintf("%s/v2.0/subnets", c.URL),
-		Method:       "POST",
+		Method:       http.MethodPost,
 		Body:         jsonStr,
 		OkStatusCode: http.StatusCreated,
 	})
@@ -219,7 +219,7 @@ func (c *Client) CreatePort(p Port) (Port, error) {
 
 	resp, err := c.doRequest(request{
 		URL:          fmt.Sprintf("%s/v2.0/ports", c.URL),
-		Method:       "POST",
+		Method:       http.MethodPost,
 		Body:         jsonStr,
 		OkStatusCode: http.StatusCreated,
 	})
@@ -243,7 +243,7 @@ func (c *Client) DeletePort(id string) error {
 	}
 	_, err := c.doRequest(request{
 		URL:          fmt.Sprintf("%s/v2.0/ports/%s", c.URL, id),
-		Method:       "DELETE",
+		Method:       http.MethodDelete,
 		OkStatusCode: http.StatusNoContent,
 	})
 	if err != nil {
