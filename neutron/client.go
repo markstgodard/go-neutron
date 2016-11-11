@@ -59,10 +59,10 @@ func (c *Client) doRequest(r request) (response, error) {
 		return response{}, err
 	}
 
-	// fmt.Printf("resp: %s\n", body)
+	details := fmt.Sprintf("resp: %s", body)
 
 	if resp.StatusCode != r.OkStatusCode {
-		return response{}, fmt.Errorf("Error: %s\n", resp.Status)
+		return response{}, fmt.Errorf("Error: %s details: %s\n", resp.Status, details)
 	}
 	return response{Body: body, StatusCode: resp.StatusCode}, nil
 }
