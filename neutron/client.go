@@ -10,6 +10,18 @@ import (
 
 const X_AUTH_TOKEN_HEADER = "X-Auth-Token"
 
+type request struct {
+	URL          string
+	Method       string
+	Body         []byte
+	OkStatusCode int
+}
+
+type response struct {
+	Body       []byte
+	StatusCode int
+}
+
 type Client struct {
 	URL   string
 	token string
@@ -23,18 +35,6 @@ func NewClient(url, token string) (*Client, error) {
 		return nil, fmt.Errorf("missing token")
 	}
 	return &Client{URL: url, token: token}, nil
-}
-
-type request struct {
-	URL          string
-	Method       string
-	Body         []byte
-	OkStatusCode int
-}
-
-type response struct {
-	Body       []byte
-	StatusCode int
 }
 
 func (c *Client) doRequest(r request) (response, error) {
@@ -59,10 +59,8 @@ func (c *Client) doRequest(r request) (response, error) {
 		return response{}, err
 	}
 
-	details := fmt.Sprintf("resp: %s", body)
-
 	if resp.StatusCode != r.OkStatusCode {
-		return response{}, fmt.Errorf("Error: %s details: %s\n", resp.Status, details)
+		return response{}, fmt.Errorf("Error: %s details: %s\n", resp.Status, body)
 	}
 	return response{Body: body, StatusCode: resp.StatusCode}, nil
 }
